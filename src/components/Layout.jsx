@@ -1,21 +1,14 @@
-// src/components/Layout.jsx
-
 import { useState } from "react";
-import { Bell, CircleUserRound, Menu, X } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import Sidebar from "./Sidebar";
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="erp-layout">
-
-      {/* Mobile overlay */}
+    <div className="layout">
       {sidebarOpen && (
-        <div
-          className="mobile-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="backdrop" onClick={() => setSidebarOpen(false)} />
       )}
 
       <Sidebar
@@ -23,51 +16,30 @@ export default function Layout({ children }) {
         closeMobileMenu={() => setSidebarOpen(false)}
       />
 
-      <div className="main-area">
-
-        <header className="topbar">
-
-          <div className="topbar-left">
-
-            {/* Mobile menu */}
+      <div className="main-wrapper">
+        <header className="navbar">
+          <div className="navbar-left">
             <button
-              className="mobile-menu-button"
+              className="btn-menu"
               onClick={() => setSidebarOpen(true)}
-              aria-label="Open menu"
+              aria-label="Toggle navigation"
             >
-              <Menu size={21} />
+              <Menu size={20} />
             </button>
-
-            <div>
-              <h3>Swastik Properties</h3>
-              <span>Property Management</span>
-            </div>
-
+            <span className="navbar-brand-name">Swastik Properties ERP</span>
           </div>
 
-          <div className="topbar-right">
-
-            <button className="icon-button">
-              <Bell size={18} />
-            </button>
-
-            <div className="admin-profile">
-              <CircleUserRound size={20} />
-
-              <div>
-                <strong>Admin</strong>
-                <span>Administrator</span>
-              </div>
+          <div className="navbar-right">
+            <div className="user-pill">
+              <User size={15} />
+              <span>Admin</span>
             </div>
-
           </div>
-
         </header>
 
-        <main className="page-content">
+        <main className="content">
           {children}
         </main>
-
       </div>
     </div>
   );

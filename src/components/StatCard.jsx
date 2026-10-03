@@ -1,22 +1,15 @@
-// src/components/StatCard.jsx
-
-export default function StatCard({
-  title,
-  value,
-  icon: Icon,
-  description,
-}) {
+export default function StatCard({ title, value, icon: Icon }) {
   return (
-    <div className="stat-card">
-      <div className="stat-icon">
-        <Icon size={20} />
+    <div className="metric-card">
+      <div className="metric-header">
+        <span className="metric-title">{title}</span>
+        {Icon && (
+          <div className="metric-icon">
+            <Icon size={17} />
+          </div>
+        )}
       </div>
-
-      <div className="stat-content">
-        <span>{title}</span>
-        <strong>{value}</strong>
-        {description && <small>{description}</small>}
-      </div>
+      <div className="metric-value">{value}</div>
     </div>
   );
 }
