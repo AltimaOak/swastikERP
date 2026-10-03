@@ -2047,3 +2047,359 @@ textarea:focus {
   }
 
 }
+/* =========================================================
+   PROPERTY MATCH MODAL
+   ========================================================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(20, 18, 15, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal-card {
+  width: min(900px, 100%);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px;
+  border-bottom: 1px solid #eee8df;
+}
+
+.modal-header h2 {
+  margin: 4px 0 6px;
+  font-size: 22px;
+}
+
+.modal-subtitle {
+  margin: 0;
+  color: #77716a;
+  font-size: 14px;
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: #f6f3ef;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: #ece7e0;
+}
+
+
+/* =========================================================
+   MATCH SUMMARY
+   ========================================================= */
+
+.match-summary {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: #ebe6df;
+  border-bottom: 1px solid #ebe6df;
+}
+
+.match-summary > div {
+  background: #faf9f7;
+  padding: 13px 15px;
+}
+
+.match-summary span {
+  display: block;
+  font-size: 11px;
+  color: #8a847c;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.match-summary strong {
+  display: block;
+  font-size: 13px;
+  color: #292622;
+}
+
+
+/* =========================================================
+   MATCH PROPERTY LIST
+   ========================================================= */
+
+.match-list {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 200px;
+}
+
+.match-property {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1px solid #e9e4dc;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.15s ease;
+  background: #fff;
+}
+
+.match-property:hover {
+  border-color: #cfc6ba;
+  background: #fcfbf9;
+}
+
+.match-property.selected {
+  border-color: #8d735a;
+  background: #faf7f2;
+}
+
+.match-check {
+  padding-top: 2px;
+}
+
+.match-check svg {
+  color: #80674e;
+}
+
+.empty-check {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid #cfc8bf;
+  border-radius: 50%;
+}
+
+.match-property-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.match-property-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.match-property h3 {
+  margin: 0 0 5px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #292622;
+}
+
+.match-location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #77716a;
+  font-size: 12px;
+}
+
+.match-location svg {
+  flex-shrink: 0;
+}
+
+.match-score {
+  flex-shrink: 0;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #f0ebe4;
+  color: #725d47;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.match-details {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+  color: #5f5952;
+  font-size: 12px;
+}
+
+.match-details span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+
+/* =========================================================
+   MODAL FOOTER
+   ========================================================= */
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #ebe6df;
+  background: #faf9f7;
+}
+
+.modal-footer > span {
+  color: #77716a;
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  height: 38px;
+  padding: 0 15px;
+  border-radius: 8px;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.primary-button {
+  background: #5e4b3a;
+  color: #fff;
+}
+
+.primary-button:hover {
+  background: #49392c;
+}
+
+.primary-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  background: #eeeae5;
+  color: #4f4943;
+}
+
+.secondary-button:hover {
+  background: #e3ded7;
+}
+
+.danger-button {
+  background: #b93838;
+  color: #fff;
+}
+
+.danger-button:hover {
+  background: #9e2f2f;
+}
+
+
+/* =========================================================
+   DELETE MODAL
+   ========================================================= */
+
+.delete-modal {
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 26px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.delete-modal h2 {
+  margin: 16px 0 8px;
+  font-size: 20px;
+}
+
+.delete-modal p {
+  margin: 0;
+  color: #706a63;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.delete-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff0f0;
+  color: #b93838;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 800px) {
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-card {
+    max-height: 94vh;
+    border-radius: 12px;
+  }
+
+  .match-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .match-property-top {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .modal-footer > div {
+    width: 100%;
+  }
+
+  .modal-footer button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 500px) {
+  .match-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .match-details {
+    gap: 9px;
+  }
+}

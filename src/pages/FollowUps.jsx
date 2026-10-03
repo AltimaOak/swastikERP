@@ -1,191 +1,521 @@
-// src/pages/FollowUps.jsx
-
-import { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   onValue,
-  push,
   ref,
-  set,
+  remove,
   update,
 } from "firebase/database";
 
-import { Plus } from "lucide-react";
+import {
+  Search,
+  Phone,
+  MessageCircle,
+  CalendarDays,
+  Clock,
+  CheckCircle2,
+  Trash2,
+  Edit3,
+  X,
+  UserRound,
+} from "lucide-react";
 
 import { db } from "../firebase/config";
-import Modal from "../components/Modal";
+import "./FollowUps.css";
 
-export default function FollowUps() {
-  const [followUps, setFollowUps] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+const FollowUps = () => {
+  const [followups, setFollowups] = useState([]);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
+
+  const [loading, setLoading] = useState(true);
+
+  const [editFollowup, setEditFollowup] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const [form, setForm] = useState({
-    title: "",
     date: "",
-    mode: "Call",
+    time: "",
+    type: "Call",
     notes: "",
-    status: "pending",
+    status: "Pending",
   });
 
+  /* =========================
+     LOAD FOLLOW UPS
+  ========================= */
+
   useEffect(() => {
-    return onValue(ref(db, "followups"), (snapshot) => {
-      const data = snapshot.val() || {};
+    const followupsRef = ref(db, "followups");
 
-      const list = Object.entries(data).map(([id, value]) => ({
-        id,
-        ...value,
-      }));
+    const unsubscribe = onValue(
+      followupsRef,
+      (snapshot) => {
+        const data = snapshot.val();
 
-      list.sort((a, b) =>
-        String(a.date || "").localeCompare(
-          String(b.date || "")
-        )
-      );
+        if (!data) {
+          setFollowups([]);
+          setLoading(false);
+          return;
+        }
 
-      setFollowUps(list);
-    });
+        const list = Object.entries(data).map(
+          ([id, value]) => ({
+            id,
+            ...value,
+          })
+        );
+
+        list.sort((a, b) => {
+          const dateA = new Date(
+            `${a.date || ""} ${a.time || ""}`
+          ).getTime();
+
+          const dateB = new Date(
+            `${b.date || ""} ${b.time || ""}`
+          ).getTime();
+
+          return dateA - dateB;
+        });
+
+        setFollowups(list);
+        setLoading(false);
+      },
+      (error) => {
+        console.error(error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
-  const addFollowUp = async (e) => {
-    e.preventDefault();
+  /* =========================
+     FILTER
+  ========================= */
 
-    const newRef = push(ref(db, "followups"));
+  const filteredFollowups = useMemo(() => {
+    const query = search.toLowerCase().trim();
 
-    await set(newRef, {
-      ...form,
-      createdAt: Date.now(),
+    return followups.filter((item) => {
+
+      const matchesSearch =
+        !query ||
+        [
+          item.clientName,
+          item.phone,
+          item.type,
+          item.notes,
+          item.status,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+
+      const matchesFilter =
+        filter === "All" ||
+        item.status === filter;
+
+      return matchesSearch && matchesFilter;
     });
+  }, [followups, search, filter]);
+
+  /* =========================
+     EDIT
+  ========================= */
+
+  const openEdit = (followup) => {
+    setEditFollowup(followup);
 
     setForm({
-      title: "",
-      date: "",
-      mode: "Call",
-      notes: "",
-      status: "pending",
+      date: followup.date || "",
+      time: followup.time || "",
+      type: followup.type || "Call",
+      notes: followup.notes || "",
+      status: followup.status || "Pending",
     });
-
-    setShowModal(false);
   };
 
-  const markComplete = async (item) => {
-    await update(
-      ref(db, `followups/${item.id}`),
-      {
-        status:
-          item.status === "completed"
-            ? "pending"
-            : "completed",
-      }
+  const saveFollowup = async () => {
+    if (!editFollowup) return;
+
+    try {
+      await update(
+        ref(db, `followups/${editFollowup.id}`),
+        {
+          date: form.date,
+          time: form.time,
+          type: form.type,
+          notes: form.notes,
+          status: form.status,
+          updatedAt: Date.now(),
+        }
+      );
+
+      setEditFollowup(null);
+    } catch (error) {
+      console.error(error);
+      alert("Unable to update follow-up.");
+    }
+  };
+
+  /* =========================
+     COMPLETE
+  ========================= */
+
+  const markCompleted = async (followup) => {
+    try {
+      await update(
+        ref(db, `followups/${followup.id}`),
+        {
+          status: "Completed",
+          completedAt: Date.now(),
+          updatedAt: Date.now(),
+        }
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Unable to update follow-up.");
+    }
+  };
+
+  /* =========================
+     DELETE
+  ========================= */
+
+  const deleteFollowup = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      await remove(
+        ref(db, `followups/${deleteTarget.id}`)
+      );
+
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error(error);
+      alert("Unable to delete follow-up.");
+    }
+  };
+
+  /* =========================
+     WHATSAPP
+  ========================= */
+
+  const openWhatsApp = (phone) => {
+    if (!phone) return;
+
+    const digits = String(phone).replace(/\D/g, "");
+
+    const number =
+      digits.length === 10
+        ? `91${digits}`
+        : digits;
+
+    window.open(
+      `https://wa.me/${number}`,
+      "_blank"
     );
   };
 
+  /* =========================
+     DATE FORMAT
+  ========================= */
+
+  const formatDate = (date) => {
+    if (!date) return "No date";
+
+    const parsed = new Date(`${date}T00:00:00`);
+
+    if (Number.isNaN(parsed.getTime())) {
+      return date;
+    }
+
+    return parsed.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   return (
-    <div>
+    <div className="followups-page">
+
+      {/* HEADER */}
 
       <div className="page-header">
 
         <div>
-          <p className="eyebrow">TASKS</p>
-          <h1>Follow-ups</h1>
-          <p className="page-subtitle">
-            Track calls, WhatsApp messages and site visits.
+          <h1>Follow Ups</h1>
+
+          <p>
+            Track your upcoming client calls,
+            meetings and site visits.
           </p>
         </div>
 
-        <button
-          className="primary-button"
-          onClick={() => setShowModal(true)}
-        >
-          <Plus size={17} />
-          Add Follow-up
-        </button>
+        <div className="followup-count">
+          {followups.length} Follow Ups
+        </div>
 
       </div>
 
-      <div className="content-card">
+      {/* TOOLBAR */}
 
-        <div className="followup-list">
+      <div className="followup-toolbar">
 
-          {followUps.map((item) => (
-            <div
-              className={`followup-item ${
-                item.status === "completed"
-                  ? "completed"
-                  : ""
-              }`}
-              key={item.id}
+        <div className="search-box">
+
+          <Search size={18} />
+
+          <input
+            placeholder="Search client or follow-up..."
+            value={search}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
+          />
+
+        </div>
+
+        <div className="filter-buttons">
+
+          {[
+            "All",
+            "Pending",
+            "Completed",
+            "Cancelled",
+          ].map((item) => (
+
+            <button
+              key={item}
+              className={
+                filter === item
+                  ? "filter-button active"
+                  : "filter-button"
+              }
+              onClick={() =>
+                setFilter(item)
+              }
             >
+              {item}
+            </button>
 
-              <div>
-                <strong>
-                  {item.title || "Follow-up"}
-                </strong>
-
-                <span>
-                  {item.date || "No date"} •{" "}
-                  {item.mode || "Call"}
-                </span>
-
-                {item.notes && (
-                  <small>{item.notes}</small>
-                )}
-              </div>
-
-              <button
-                className="secondary-button"
-                onClick={() =>
-                  markComplete(item)
-                }
-              >
-                {item.status === "completed"
-                  ? "Completed"
-                  : "Mark Done"}
-              </button>
-
-            </div>
           ))}
-
-          {followUps.length === 0 && (
-            <div className="empty-state">
-              No follow-ups added yet.
-            </div>
-          )}
 
         </div>
 
       </div>
 
-      {showModal && (
-        <Modal
-          title="Add Follow-up"
-          onClose={() => setShowModal(false)}
-        >
+      {/* FOLLOW UP LIST */}
 
-          <form
-            className="form-stack"
-            onSubmit={addFollowUp}
-          >
+      {loading ? (
+        <div className="empty-state">
+          Loading follow-ups...
+        </div>
+      ) : filteredFollowups.length === 0 ? (
+        <div className="empty-state">
 
-            <label>
-              Task
+          <CalendarDays size={38} />
 
-              <input
-                value={form.title}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    title: e.target.value,
-                  })
+          <h3>No follow-ups found</h3>
+
+          <p>
+            Create follow-ups from the Enquiries
+            or Clients page.
+          </p>
+
+        </div>
+      ) : (
+
+        <div className="followup-list">
+
+          {filteredFollowups.map((followup) => (
+
+            <div
+              className={`followup-card ${
+                followup.status === "Completed"
+                  ? "completed"
+                  : ""
+              }`}
+              key={followup.id}
+            >
+
+              {/* DATE */}
+
+              <div className="followup-date">
+
+                <CalendarDays size={18} />
+
+                <strong>
+                  {formatDate(followup.date)}
+                </strong>
+
+                {followup.time && (
+                  <span>
+                    <Clock size={13} />
+                    {followup.time}
+                  </span>
+                )}
+
+              </div>
+
+              {/* CLIENT */}
+
+              <div className="followup-client">
+
+                <div className="client-avatar">
+                  <UserRound size={18} />
+                </div>
+
+                <div>
+                  <strong>
+                    {followup.clientName ||
+                      "Unknown Client"}
+                  </strong>
+
+                  <span>
+                    {followup.phone ||
+                      "No phone"}
+                  </span>
+                </div>
+
+              </div>
+
+              {/* DETAILS */}
+
+              <div className="followup-details">
+
+                <span className="followup-type">
+                  {followup.type || "Call"}
+                </span>
+
+                <p>
+                  {followup.notes ||
+                    "No notes added."}
+                </p>
+
+              </div>
+
+              {/* STATUS */}
+
+              <div>
+
+                <span
+                  className={`followup-status ${String(
+                    followup.status || "Pending"
+                  ).toLowerCase()}`}
+                >
+                  {followup.status || "Pending"}
+                </span>
+
+              </div>
+
+              {/* ACTIONS */}
+
+              <div className="followup-actions">
+
+                {followup.phone && (
+                  <>
+                    <a
+                      href={`tel:${followup.phone}`}
+                      className="icon-action"
+                      title="Call"
+                    >
+                      <Phone size={16} />
+                    </a>
+
+                    <button
+                      className="icon-action whatsapp"
+                      onClick={() =>
+                        openWhatsApp(
+                          followup.phone
+                        )
+                      }
+                      title="WhatsApp"
+                    >
+                      <MessageCircle size={16} />
+                    </button>
+                  </>
+                )}
+
+                {followup.status !==
+                  "Completed" && (
+                  <button
+                    className="icon-action success"
+                    onClick={() =>
+                      markCompleted(followup)
+                    }
+                    title="Mark Completed"
+                  >
+                    <CheckCircle2 size={16} />
+                  </button>
+                )}
+
+                <button
+                  className="icon-action"
+                  onClick={() =>
+                    openEdit(followup)
+                  }
+                  title="Edit"
+                >
+                  <Edit3 size={16} />
+                </button>
+
+                <button
+                  className="icon-action danger"
+                  onClick={() =>
+                    setDeleteTarget(followup)
+                  }
+                  title="Delete"
+                >
+                  <Trash2 size={16} />
+                </button>
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      )}
+
+      {/* =========================
+          EDIT MODAL
+      ========================= */}
+
+      {editFollowup && (
+        <div className="modal-overlay">
+
+          <div className="modal-card">
+
+            <div className="modal-header">
+
+              <div>
+                <h2>Edit Follow Up</h2>
+
+                <p>
+                  {editFollowup.clientName}
+                </p>
+              </div>
+
+              <button
+                className="modal-close"
+                onClick={() =>
+                  setEditFollowup(null)
                 }
-                placeholder="Call Rahul about 2 BHK"
-                required
-              />
+              >
+                <X size={20} />
+              </button>
 
-            </label>
+            </div>
 
-            <div className="two-column">
+            <div className="form-row">
 
-              <label>
-                Date
+              <div className="form-group">
+                <label>Date</label>
 
                 <input
                   type="date"
@@ -196,35 +526,66 @@ export default function FollowUps() {
                       date: e.target.value,
                     })
                   }
-                  required
                 />
+              </div>
 
-              </label>
+              <div className="form-group">
+                <label>Time</label>
 
-              <label>
-                Contact Method
-
-                <select
-                  value={form.mode}
+                <input
+                  type="time"
+                  value={form.time}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      mode: e.target.value,
+                      time: e.target.value,
                     })
                   }
-                >
-                  <option>Call</option>
-                  <option>WhatsApp</option>
-                  <option>Site Visit</option>
-                  <option>Email</option>
-                </select>
-
-              </label>
+                />
+              </div>
 
             </div>
 
-            <label>
-              Notes
+            <div className="form-group">
+              <label>Type</label>
+
+              <select
+                value={form.type}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    type: e.target.value,
+                  })
+                }
+              >
+                <option>Call</option>
+                <option>WhatsApp</option>
+                <option>Meeting</option>
+                <option>Site Visit</option>
+                <option>Email</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Status</label>
+
+              <select
+                value={form.status}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    status: e.target.value,
+                  })
+                }
+              >
+                <option>Pending</option>
+                <option>Completed</option>
+                <option>Cancelled</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Notes</label>
 
               <textarea
                 value={form.notes}
@@ -234,23 +595,82 @@ export default function FollowUps() {
                     notes: e.target.value,
                   })
                 }
-                placeholder="Add notes..."
+                placeholder="Follow-up notes..."
               />
+            </div>
 
-            </label>
+            <div className="modal-footer">
 
-            <button
-              className="primary-button full-width"
-              type="submit"
-            >
-              Save Follow-up
-            </button>
+              <button
+                className="secondary-button"
+                onClick={() =>
+                  setEditFollowup(null)
+                }
+              >
+                Cancel
+              </button>
 
-          </form>
+              <button
+                className="primary-button"
+                onClick={saveFollowup}
+              >
+                Save Changes
+              </button>
 
-        </Modal>
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+      {/* =========================
+          DELETE MODAL
+      ========================= */}
+
+      {deleteTarget && (
+        <div className="modal-overlay">
+
+          <div className="delete-modal">
+
+            <div className="delete-icon">
+              <Trash2 size={23} />
+            </div>
+
+            <h2>Delete follow-up?</h2>
+
+            <p>
+              This follow-up will be permanently
+              removed.
+            </p>
+
+            <div className="modal-footer">
+
+              <button
+                className="secondary-button"
+                onClick={() =>
+                  setDeleteTarget(null)
+                }
+              >
+                Cancel
+              </button>
+
+              <button
+                className="danger-button"
+                onClick={deleteFollowup}
+              >
+                Delete
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
       )}
 
     </div>
   );
-}
+};
+
+export default FollowUps;
